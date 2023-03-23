@@ -16,13 +16,11 @@ import sampling_layer
 class Builder():
     """
     will return an encoder and a decoder as keras model
-
     input_shape: a tuple of integers like (32,) or (3, 4)
     encoder_shape: the shape of the encoder which will be handed as a list
     decoder_shape: the shape of the decoder which will be handed as a list
     latent dims: shape of the latent space sampled from the z-vectors
     dropout_rate: 0 by default, otherwise the drouput
-
     """
     def __init__(self,
                  input_shape,
@@ -42,9 +40,7 @@ class Builder():
     def _build(self):
         """
         Builds the encoder an the decoder and keeps them as attribute
-
         ######################################################################
-
         """
         encoder_input = keras.layers.Input(self.input_shape)
         encoder_input = keras.layers.BatchNormalization()(encoder_input)
@@ -83,7 +79,7 @@ class Builder():
                                              activation="relu")(layer_stack)
 
         # last layer needs to be identical to the input
-        decoder_output = keras.layers.Dense(self.input_shape[0],
+        decoder_output = keras.layers.Dense(self.input_shape,
                                             activation="relu")(layer_stack)
 
         self.decoder_model = keras.Model(decoder_input, decoder_output)
@@ -94,10 +90,10 @@ class VAE(keras.Model):
     """
     Will return the complete model with a custom trining-step
     """
-    def __init__(self, decoder, encoder, **kwargs):
+    def __init__(self, vae_model, **kwargs):
         super().__init__(**kwargs)
-        self.encoder = encoder
-        self.decoder = decoder
+        self.encoder = vae_model.encoder_model
+        self.decoder = vae_model.decoder_model
         self.total_loss_tracker = tf.metrics.Mean(name="total_loss")
         self.reconstruction_loss_tracker = tf.metrics.Mean(
                 name="reconstruction_loss_tracker"
@@ -124,15 +120,15 @@ class VAE(keras.Model):
             reconstruction = self.decoder(z)
 
             # also compute the feature wise recon-loss:
-            fwise_recon_error = K.square(data - reconstruction)
+            fwise_recon_error = tf.keras.losses.binary_crossentropy(
+                    data, reconstruction, axis=0
+                    )
 
-            reconstruction_loss = K.mean(fwise_recon_error,
-                                         axis=1)
+            reconstruction_loss = tf.math.reduce_mean(fwise_recon_error)
 
-            kl_loss = -.5 * (1 + z_logvar - K.square(z_mean) - K.exp(
-                z_logvar)
-                             )
-            kl_loss = K.sum(kl_loss)
+            kl_loss = -.5 * (1 + z_logvar - tf.square(z_mean) - tf.exp(
+                z_logvar))
+            kl_loss = tf.reduce_sum(kl_loss)
             total_loss = kl_loss + reconstruction_loss
 
         grads = tape.gradient(total_loss, self.trainable_weights)

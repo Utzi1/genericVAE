@@ -12,11 +12,11 @@ import generic_VAE
 
 # create some random, uniformly distributed tensors:
 training_dummys = np.asarray(
-        [tf.random.uniform((400,)) for item in range(100000)])
+        [tf.random.uniform((400,)) for item in range(1000)])
 
 # create some testing tensors:
 testing_dummys = np.asarray(
-        [tf.random.uniform((400,)) for item in range(50000)])
+        [tf.random.uniform((400,)) for item in range(500)])
 
 # this is completely senseless, the part where a training-set and one for
 # testing was created the VAE is unsupervised (in this case)
@@ -29,11 +29,11 @@ dummy_vae = generic_VAE.Builder(
         latent_dims=5,
         dropout_rate=0)
 
-vae = generic_VAE.VAE(dummy_vae.decoder_model, dummy_vae.encoder_model)
+vae = generic_VAE.VAE(dummy_vae)
 vae.compile()
-vae_hist = vae.fit(dummy_data, epochs=5, batch_size=2000)
+vae_hist = vae.fit(dummy_data, epochs=5, batch_size=20)
 
 # acess index of  min and max vals:
-recons = vae.feature_reconstruction.numpy()
-np.where(recons == recons.min())[0][0]
-np.where(recons == recons.max())[0][0]
+# recons = vae.feature_reconstruction.numpy()
+# np.where(recons == recons.min())[0][0]
+# np.where(recons == recons.max())[0][0]
