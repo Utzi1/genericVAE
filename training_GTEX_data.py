@@ -8,10 +8,10 @@ import numpy as np
 # read the data:
 # data = h5py.File("ln_filtered_GTEX.h5py").get("train")
 
-with h5py.File("ln_center_GTEX.h5") as train:
+with h5py.File("../ln_center_GTEX.h5") as train:
     data = train["train"][:]
 
-data_train = data_handler.DataGenerator("train", "ln_center_GTEX.h5", 10)
+data_train = data_handler.DataGenerator("train", "../ln_center_GTEX.h5", 10)
 input_dims = data[0].shape[0]
 
 # for log-normalisation:
