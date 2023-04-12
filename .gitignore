@@ -39,3 +39,7 @@ Thumbs.db
 # h5 #
 ######
 *.h5
+
+# And the data dir in general #
+###############################
+data/*

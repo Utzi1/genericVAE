@@ -1,0 +1,177 @@
+---
+title: "Briefing on the project"
+format: beamer
+editor: visual
+---
+
+```{r, include=F}
+library('clusterProfiler')
+library('org.Hs.eg.db')
+library('tidyverse')
+library('STRINGdb')
+
+data = read_csv("recons/recons_per_gene.csv") %>% arrange(recon_error)
+
+ref = data$name
+
+top_200 = data$name[1:200]
+
+ego = enrichGO(gene = top_200,
+               OrgDb = org.Hs.eg.db,
+               universe = ref,
+               keyType = "SYMBOL")
+
+barplot(ego)
+
+
+string_db = STRINGdb$new(species=9606,
+                         score_threshold=200,
+                         input_directory="")
+
+
+
+```
+
+## Information gain over the last week {#sec-1}
+
+1.  Filtering the data prior to training changes A LOT
+
+2.  The applied filters will change the enrichment in the output
+
+3.  The the `genericVAE` handles large data easiely
+
+## Different filters
+
+So far data was filtered by GO-terms or presence of genes in STRING
+
+![Interactions of the top-100 genes with a filter focusing genes from STRING from all samples in GTEx V8](top_100_interactions_string_filtered.png){width="329"}
+
+## Enrichment
+
+For the data filtered based on genes in STRING from all samples in GTEx V8
+
+```{r}
+goplot(ego)
+library(MOMA)
+```
+
+## Filtering
+
+```         
+data.loc[data["Hugo_Symbol"].isin(trans_assoc["names"])]
+```
+
+-   Where `names` are GO:0003700 : DNA-binding transcription factor activity
+-   and GO:0006351 : DNA-templated transcription
+-   GO:0010467 : gene expression might be added
+
+
+```
+
+```
+
+> **Analysis on the following slides based on this filter**
+
+## GO-Enrichment in breast cancer rna-seq data from `doi: 10.1038/sdata.2018.61`
+
+```{r}
+data = read_csv("recons/recons_brcarsemfpkmtcgat.csv", col_names = F)
+
+ref = data$X2
+
+top_200 = data$X2[1:500]
+
+ego = enrichGO(gene = top_200,
+               OrgDb = org.Hs.eg.db,
+               universe = ref,
+               keyType = "SYMBOL")
+barplot(ego, showCategory=7)
+eKegg = enrichKEGG(gene=mapHugo(top_200),
+                   organism = "hsa")
+
+```
+
+## KEGG-Enrichmentin breast cancer rna-seq data from `doi: 10.1038/sdata.2018.61`
+
+```{r}
+barplot(eKegg)
+```
+
+## The PPI-network for the 200-top ranked genes from `doi: 10.1038/sdata.2018.61`
+
+```{r}
+mapping = string_db$map(data.frame("gene"=top_200), "gene")
+string_db$plot_network(mapping)
+```
+
+## The last 100 elements of the same list:
+
+```
+last_100 = tail(data$X2, 100)
+ego = enrichGO(gene = last_100,
+               OrgDb = org.Hs.eg.db,
+               universe = ref,
+               keyType = "SYMBOL")
+ego
+
+# over-representation test#
+#...@organism    Homo sapiens
+#...@ontology    MF
+#...@keytype     SYMBOL
+#...@gene    chr [1:100] "ZNF576" "MLLT10" "ZNF213" ...
+#...pvalues adjusted by 'BH' with cutoff <0.05
+#...0 enriched terms found
+```
+
+
+## Enrichment in regular breast cells from dbGaP phs000424.v8.p2
+
+```{r}
+data = read_csv("recons/recons_GTEx_mammary.csv")
+
+ref = data$name
+
+top_200 = data$name[1:200]
+
+ego = enrichGO(gene = top_200,
+               OrgDb = org.Hs.eg.db,
+               universe = ref,
+               keyType = "SYMBOL")
+
+goplot(ego)
+```
+
+## KEGG-enrichment dbGaP phs000424.v8.p2
+
+```{r}
+eKegg = enrichKEGG(gene=mapHugo(top_200),
+                   organism = "hsa")
+barplot(eKegg)
+```
+
+
+## The PPI-network for the 200-top ranked genes from dbGaP phs000424.v8.p2
+
+```{r}
+mapping = string_db$map(data.frame("gene"=top_200), "gene")
+string_db$plot_network(mapping)
+```
+
+## TFTenricher
+
+```
+from TFTenricher import TFTenricher
+
+TFs = top_100
+enr = TFTenricher(TFs)
+
+loading corr
+Done
+76.34408602150538% of TFs are not found
+1.387% of correlation table TFs were in the TF list
+```
+
+## Next steps
+
+
+  * 

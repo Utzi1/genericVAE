@@ -1,22 +1,16 @@
 import h5py
 import numpy as np
 
+def log_norm(data=np.array([])):
+    return np.log(data.astype("float32") + 1.)
 
-data = np.array(h5py.File("filtered_train.h5", "r").get("reads"))
+def scale(data):
+    return data * (1 / np.max(data))
 
+def scale_by_sample(data):
+    return np.apply_along_axis(scale, axis=1, arr=data)
 
-log_norm = np.log(data + 1)
-
-scaled = log_norm / np.max(log_norm)
-
-hf = h5py.File("ln_center_GTEX.h5", "w")
-hf.create_dataset("train", data=scaled)
-
-data = np.array(h5py.File("filtered_test.h5", "r").get("reads"))
-
-log_norm = np.log(data + 1)
-
-scaled = log_norm / np.max(log_norm)
-
-hf.create_dataset("test", data=scaled)
-hf.close()
+def read_from_h5(file='.', set_name="data"):
+    with h5py.File(file) as f:
+        data = f.get(set_name)
+    return data
