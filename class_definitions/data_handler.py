@@ -30,6 +30,8 @@ class DataGenerator(keras.utils.Sequence):
         self.filepath = filepath
         # load the data!:
         self.data = h5py.File(filepath, "r").get(dataset_name)
+        # here is room for possible processing steps
+        # but thats not the case here!
         self._samples_in_set = self.data.shape[0]
         self.on_epoch_end()
 
@@ -54,8 +56,6 @@ class DataGenerator(keras.utils.Sequence):
 
     def on_epoch_end(self):
         """Updates indexes after each epoch, also performs shuffeling
-        :returns: TODO
-
         """
         self.indexes = np.arange(self._samples_in_set)
 

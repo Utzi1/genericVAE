@@ -1,25 +1,28 @@
 import pandas as pd
 from scipy.stats import fisher_exact
+from pathlib import Path
+
+base_path = Path(__file__).parent
+file_path = (base_path / "trrust_rawdata.human.tsv").resolve()
 
 
-def f_exact_test(subset=[], all=[], tfs=[]):
+def f_exact_test(subset, alle, tfs=[]):
     """Computes a Fisher exact test on gene sets
 
     :subset: a set of genes, filtered from all genes
     :all: All genes used (for training)
     :tfs: a list of transcription facors, defaulted with data from TRRUST
               version 2
-    :returns: TODO
+    :returns: The output from the fishers exat test and its contingency table
     """
     if len(tfs) == 0:
-        tfs = pd.read_csv("trrust_rawdata.human.tsv", sep="\t")
-
-    # make tfs a set:
-    tfs = set(tfs["AATF"])
+        tfs = pd.read_csv(file_path, sep="\t")
+        # make tfs a set:
+        tfs = set(tfs["AATF"])
     # the contigency-table
-    ctab = [[len(tfs.intersection(subset)),
-             len(tfs.difference(subset))],
-            [len(subset.difference(tfs)),
-             len(all.difference(tfs.union(subset)))]]
-    return fisher_exact(ctab)
-
+    ctab = [[len(tfs & subset),
+             len(tfs - subset)],
+            [len(subset - tfs),
+             len(alle - (tfs | subset))]]
+    return [fisher_exact(ctab),
+            ctab]

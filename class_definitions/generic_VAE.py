@@ -9,7 +9,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow import keras
 import keras.backend as K
-import sampling_layer
+from . import sampling_layer
 
 
 
