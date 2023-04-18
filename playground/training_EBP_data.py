@@ -1,3 +1,12 @@
+"""
+File: training_EBP_data.py
+Author: ULR
+Email: b21utzri@student.his.se
+Github: Utzi1
+Description: Training with
+             https://gdc.cancer.gov/about-data/publications/PanCan-CellOfOrigin
+"""
+
 import h5py
 import generic_VAE
 import data_handler
@@ -27,11 +36,11 @@ input_dims = data[0].shape[0]
 # data = layer(data)
 # build a VAE:
 vae_build = generic_VAE.Builder(
-        input_dims,
-        [1000],
-        [1000],
-        50,
-        dropout_rate=.0001)
+    input_dims,
+    [1000],
+    [1000],
+    50,
+    dropout_rate=.0001)
 
 # make it a Model:
 vae_model = generic_VAE.VAE(vae_build)
@@ -40,7 +49,7 @@ vae_model = generic_VAE.VAE(vae_build)
 vae_model.compile()
 
 # for the amount of batches:
-# batch_size = int(np.floor(input_dims / 100))
+batches = int(np.floor(input_dims / 100))
 
-# vae_model.fit(data, batch_size=batch_size)
-vae_model.fit(data_train, epochs=100, workers=64, use_multiprocessing=True)
+vae_model.fit(data_train, epochs=batches,
+              workers=64, use_multiprocessing=True)

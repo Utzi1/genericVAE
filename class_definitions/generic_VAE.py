@@ -12,7 +12,6 @@ import keras.backend as K
 from . import sampling_layer
 
 
-
 class Builder():
     """
     will return an encoder and a decoder as keras model
@@ -22,6 +21,7 @@ class Builder():
     latent dims: shape of the latent space sampled from the z-vectors
     dropout_rate: 0 by default, otherwise the drouput
     """
+
     def __init__(self,
                  input_shape,
                  encoder_shape,
@@ -49,7 +49,7 @@ class Builder():
         # next we can build encoder
         if self.dropout_rate != 0:
             layer_stack = keras.layers.Dropout(rate=self.dropout_rate)(
-                    encoder_input)
+                encoder_input)
 
         for item in self.encoder_shape:
             layer_stack = keras.layers.Dense(units=item,
@@ -57,18 +57,18 @@ class Builder():
         # introduce the sampling layers
         # and the latent space z
         z_mean = keras.layers.Dense(units=self.latent_dims, name="mean")(
-                layer_stack
-                )
+            layer_stack
+        )
         z_logvar = keras.layers.Dense(units=self.latent_dims, name="log_var")(
-                layer_stack
-                )
+            layer_stack
+        )
         # make a vector encoding this stuff:
         z = sampling_layer.Sampling_Layer()([z_mean, z_logvar])
         # and build the model:
         self.encoder_model = keras.Model(encoder_input, [
             z_mean, z_logvar, z
-            ],
-                                         name="encoder")
+        ],
+            name="encoder")
 
         # to build the decoder:
         # put in the latent stuff
@@ -85,31 +85,32 @@ class Builder():
         self.decoder_model = keras.Model(decoder_input, decoder_output)
 
 
-
 class VAE(keras.Model):
     """
     Will return the complete model with a custom trining-step
     """
+
     def __init__(self, vae_model, **kwargs):
         super().__init__(**kwargs)
         self.encoder = vae_model.encoder_model
         self.decoder = vae_model.decoder_model
         self.total_loss_tracker = tf.metrics.Mean(name="total_loss")
         self.reconstruction_loss_tracker = tf.metrics.Mean(
-                name="reconstruction_loss_tracker"
-                )
+            name="reconstruction_loss_tracker"
+        )
         self.kl_loss_tracker = tf.metrics.Mean(name="kl_loss_tracker")
         self.fwise_recon_error_tracker = tf.metrics.MeanTensor(
-                name="feature_wise_reconstruction_error")
+            name="feature_wise_reconstruction_error")
 
     @property
     def metrics(self):
         return [
-                self.total_loss_tracker,
-                self.reconstruction_loss_tracker,
-                self.kl_loss_tracker,
-                self.fwise_recon_error_tracker
-                ]
+            self.total_loss_tracker,
+            self.reconstruction_loss_tracker,
+            self.kl_loss_tracker,
+            self.fwise_recon_error_tracker
+        ]
+
     @property
     def feature_reconstruction(self):
         return K.mean(self.fwise_recon_error_tracker.result(), axis=0)
@@ -121,8 +122,8 @@ class VAE(keras.Model):
 
             # also compute the feature wise recon-loss:
             fwise_recon_error = tf.keras.losses.binary_crossentropy(
-                    data, reconstruction, axis=0
-                    )
+                data, reconstruction, axis=0
+            )
 
             reconstruction_loss = tf.math.reduce_mean(fwise_recon_error)
 
@@ -138,8 +139,8 @@ class VAE(keras.Model):
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
         self.kl_loss_tracker.update_state(kl_loss)
         return {
-                "loss": self.total_loss_tracker.result(),
-                "reconstruction_loss": self.reconstruction_loss_tracker.result(
-                    ),
-                "kl_loss": self.kl_loss_tracker.result(),
-                }
+            "loss": self.total_loss_tracker.result(),
+            "reconstruction_loss": self.reconstruction_loss_tracker.result(
+            ),
+            "kl_loss": self.kl_loss_tracker.result(),
+        }

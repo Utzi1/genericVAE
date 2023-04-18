@@ -1,3 +1,13 @@
+"""
+File: mini_metric.py
+Author: ULR
+Email: b21utzri@student.his.se
+Github: Utzi1
+Description: This metric never got used, maybe it will be constructed in the
+             the future
+"""
+
+
 import tensorflow as tf
 import keras
 

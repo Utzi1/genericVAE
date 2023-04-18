@@ -1,3 +1,14 @@
+"""
+File: fisher_exact_for_gene_lists.py
+Author: ULR
+Email: b21utzri@student.his.se
+Github: Utzi1
+Description: Allows the user to hand two different sets of geses that will be
+             fed to scipy stats as contigency table.
+
+             Sliding window-version was removed, needs to be redone
+"""
+
 import pandas as pd
 from scipy.stats import fisher_exact
 from pathlib import Path

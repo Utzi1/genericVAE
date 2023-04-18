@@ -1,3 +1,12 @@
+"""
+File: train_hnsc.py
+Author: ULR
+Email: b21utzri@student.his.se
+Github: Utzi1
+Description: minimalistic training skript for cancer data from:
+    https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5903355/
+"""
+
 import pandas as pd
 import numpy as np
 import generic_VAE as gen

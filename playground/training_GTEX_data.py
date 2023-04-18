@@ -42,4 +42,3 @@ vae_model.compile()
 
 # vae_model.fit(data, batch_size=batch_size)
 vae_model.fit(data_train, epochs=100, workers=64, use_multiprocessing=True)
-# vae_model.fit(data, epochs=4, batch_size=10, workers=64, use_multiprocessing=True)

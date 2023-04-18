@@ -6,16 +6,17 @@ import numpy as np
 
 # read the data:
 data = h5py.File("~/x_utzri/data/filtered_train.h5").get("reads")
-data_train = data_handler.DataGenerator("reads", "~/x_utzri/data/filtered_train.h5", 10)
+data_train = data_handler.DataGenerator(
+    "reads", "~/x_utzri/data/filtered_train.h5", 10)
 input_dims = data[0].shape[0]
 
 # build a VAE:
 vae_build = generic_VAE.Builder(
-        input_dims,
-        [10000, 1000, 500],
-        [10000, 1000, 500],
-        100,
-        dropout_rate=.01)
+    input_dims,
+    [10000, 1000, 500],
+    [10000, 1000, 500],
+    100,
+    dropout_rate=.01)
 
 # make it a Model:
 vae_model = generic_VAE.VAE(vae_build)

@@ -1,3 +1,4 @@
+# fits:  <18-04-23, ULR> #
 library(GO.db)
 library(org.Hs.eg.db)
 
@@ -13,4 +14,3 @@ tf_bnd_genes = unlist(mget(allegs, org.Hs.egSYMBOL))
 all = data_frame(c(tf_bnd_genes, genes))
 
 write_csv(all, "transcription_assoc.csv")
-

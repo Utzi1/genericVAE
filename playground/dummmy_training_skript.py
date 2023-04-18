@@ -34,6 +34,6 @@ vae.compile()
 vae_hist = vae.fit(dummy_data, epochs=5, batch_size=20)
 
 # acess index of  min and max vals:
-# recons = vae.feature_reconstruction.numpy()
-# np.where(recons == recons.min())[0][0]
-# np.where(recons == recons.max())[0][0]
+recons = vae.feature_reconstruction.numpy()
+np.where(recons == recons.min())[0][0]
+np.where(recons == recons.max())[0][0]

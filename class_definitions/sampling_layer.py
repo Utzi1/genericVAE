@@ -7,10 +7,12 @@ Description: A sampling layer class for VAE's inheriting from keras Layer
 """
 import tensorflow as tf
 
+
 class Sampling_Layer(tf.keras.layers.Layer):
     """
     A sampling layer using the mean and log(var) to sample from an input
     """
+
     def call(self, inputs):
         mean, logvar = inputs
         batch = tf.shape(mean)[0]
