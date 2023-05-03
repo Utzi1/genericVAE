@@ -121,8 +121,8 @@ class VAE(keras.Model):
             reconstruction = self.decoder(z)
 
             # also compute the feature wise recon-loss:
-            fwise_recon_error = tf.keras.losses.binary_crossentropy(
-                data, reconstruction, axis=0
+            fwise_recon_error = tf.keras.losses.mean_squared_error(
+                data, reconstruction
             )
 
             reconstruction_loss = tf.math.reduce_mean(fwise_recon_error)
@@ -135,7 +135,7 @@ class VAE(keras.Model):
         grads = tape.gradient(total_loss, self.trainable_weights)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         self.total_loss_tracker.update_state(total_loss)
-        self.fwise_recon_error_tracker.update_state(fwise_recon_error)
+        # self.fwise_recon_error_tracker.update_state(fwise_recon_error)
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
         self.kl_loss_tracker.update_state(kl_loss)
         return {
