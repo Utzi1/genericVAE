@@ -10,6 +10,7 @@ import numpy as np
 from tensorflow import keras
 import keras.backend as K
 from . import sampling_layer
+from . import fwise_loss
 
 
 class Builder():
@@ -113,7 +114,7 @@ class VAE(keras.Model):
 
     @property
     def feature_reconstruction(self):
-        return K.mean(self.fwise_recon_error_tracker.result(), axis=0)
+        return self.fwise_recon_error_tracker.result().numpy()
 
     def train_step(self, data):
         with tf.GradientTape() as tape:
@@ -121,10 +122,9 @@ class VAE(keras.Model):
             reconstruction = self.decoder(z)
 
             # also compute the feature wise recon-loss:
-            fwise_recon_error = tf.keras.losses.mean_squared_error(
+            fwise_recon_error = fwise_loss.mean_squared_error(
                 data, reconstruction
             )
-
             reconstruction_loss = tf.math.reduce_mean(fwise_recon_error)
 
             kl_loss = -.5 * (1 + z_logvar - tf.square(z_mean) - tf.exp(
@@ -133,9 +133,9 @@ class VAE(keras.Model):
             total_loss = kl_loss + reconstruction_loss
 
         grads = tape.gradient(total_loss, self.trainable_weights)
+        self.fwise_recon_error_tracker.update_state(fwise_recon_error)
         self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
         self.total_loss_tracker.update_state(total_loss)
-        # self.fwise_recon_error_tracker.update_state(fwise_recon_error)
         self.reconstruction_loss_tracker.update_state(reconstruction_loss)
         self.kl_loss_tracker.update_state(kl_loss)
         return {
