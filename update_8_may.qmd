@@ -1,0 +1,192 @@
+---
+title: "Update"
+author: "ULR"
+format: ipynb
+editor: visual
+---
+
+# Overview
+
+Things to do with the ranked reconstruction errors:
+
+    - TF-Enrichment
+    - Correlation-Analysis
+    - PPI-Enrichment
+    - Outlook
+
+# TF-Enrichment
+
+In the following section all data, prior to fitting, was filtered so that only genes existing in STRINGdb would remain.
+
+## With Pan-Cancer data
+
+`https://gdc.cancer.gov/about-data/publications/pancanatlas` EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.tsv
+
+```{python}
+import pandas as pd
+from evaluation_methods.enrich_plot_over_gene_list import *
+recons_pancan = pd.read_csv("pancan_recons_total_string_filtered.csv")
+enr_pancan = Enricher(recons_pancan["name"], window_size=500)
+enr_pancan.enr_plot()
+pancan = enr_pancan.elist
+plt.clf()
+```
+
+## And with the GTEx-Data
+
+```{python}
+recons_gtex = pd.read_csv("recons/GTEx_filtereded_with_genes_in_string.csv")
+enr_gtex = Enricher(recons_gtex["x"], window_size=500)
+enr_gtex.enr_plot()
+```
+
+## And lets have a look at an overlay:
+
+```{python}
+gtex = enr_gtex.elist
+plt.plot(gtex, label="gtex")
+plt.plot(pancan, label="pancan")
+plt.ylabel("p-value for TF-enrichment")
+plt.xlabel("Genes ordered by reconstruction error")
+plt.title("p-values over a sliding window with size 500 ")
+plt.legend()
+plt.show()
+```
+
+# Correlation Analysis
+
+## Extraction of TF-enriched regions:
+
+### For the PanCan data:
+
+```{python}
+import numpy as np
+from evaluation_methods.pcc_over_exp_sets import *
+eeli = pancan + [1] * 499
+recons_pancan["enr_conf"] = eeli
+richard = recons_pancan[recons_pancan["enr_conf"] <= recons_pancan["enr_conf"].min()+.01 ]
+richs_pancan = []
+for idx in range(0, len(richard)):
+    if idx == 0:
+        sublist = []
+        sublist.append(richard.index[idx])
+    if (richard.index[idx] - richard.index[idx-1]) < 100:
+        sublist.append(richard["name"].iloc[idx])
+    else:
+        sublist.append(richard["name"].iloc[idx])
+        richs_pancan.append(sublist)
+        sublist = []
+
+in_string = pd.read_csv("h_S_string.txt", sep="\t")
+
+data = pd.read_csv("data/EBPlusPlusAdjustPANCAN_IlluminaHiSeq_RNASeqV2.geneExp.csv")
+fdat = data.loc[data["gene_id"].isin(in_string["preferred_name"])]
+tdat = fdat.transpose()
+tarry = np.array(tdat)
+exp = pd.DataFrame(data = tarry[2:, :], columns=tarry[1,:])
+
+pccs = []
+for list in richs_pancan[0:6]:
+    pccs.append(pcc_calculator(exp, tf_extractor(list)))
+
+cnt = 1
+for table in pccs:
+    count, bins = np.histogram(table["confidence"].dropna(), bins=500)
+    plt.stairs(count, bins, label=str(cnt))
+    cnt+=1
+plt.legend()
+plt.xlabel('PCC')
+plt.ylabel('Count')
+plt.title('PCC for the first 6 enriched regions')
+plt.show()
+plt.clf()
+```
+
+
+```{python}
+eeli = gtex + [1] * 499
+recons_gtex["enr_conf"] = eeli
+richard = recons_gtex[recons_gtex["enr_conf"] <= recons_gtex["enr_conf"].min()+.01 ]
+richs_gtex = []
+for idx in range(0, len(richard)):
+    if idx == 0:
+        sublist = []
+        sublist.append(richard.index[idx])
+    if (richard.index[idx] - richard.index[idx-1]) < 10:
+        sublist.append(richard["x"].iloc[idx])
+    else:
+        sublist.append(richard["x"].iloc[idx])
+        richs_gtex.append(sublist)
+        sublist = []
+
+data = pd.read_hdf("data/GTEx_Analysis_2017-06-05_v8_RNASeQCv1.1.9_gene_reads.h5", key = "data")
+data = data.drop(data[data.iloc[:, 2:].sum(axis=1) < 35425].index)
+print(data.shape)
+in_string = pd.read_csv("h_S_string.txt", sep="\t")["preferred_name"]
+fdat = data.loc[data["Description"].isin(in_string)]
+fdat = fdat.transpose()
+tarry = np.array(fdat)
+exp = pd.DataFrame(data = tarry[1:, :], columns=tarry[0,:])
+
+pccs = []
+for list in richs_gtex[0:6]:
+    pccs.append(pcc_calculator(exp, tf_extractor(list)))
+
+cnt = 1
+for table in pccs:
+    count, bins = np.histogram(table["confidence"].dropna(), bins=500)
+    plt.stairs(count, bins, label=str(cnt))
+    cnt+=1
+plt.legend()
+plt.xlabel('PCC')
+plt.ylabel('Count')
+plt.title('PCC for the first 6 enriched regions')
+plt.show()
+```
+
+# PPI-enrichment:
+
+## For the PanCan-Data:
+
+```{python}
+import stringdb
+ext_gene_lists = []
+for list in richs_pancan:
+    g_list = pd.DataFrame(list)
+    genes = g_list[0].astype("str")
+    ext_gene_lists.append(genes)
+ppi_enr_list = []
+pancan_enr_list = []
+for item in range(len(ext_gene_lists)):
+    genes = ext_gene_lists[item]
+    string_ids = stringdb.get_string_ids(genes)
+    ppi_enr_list.append(stringdb.get_ppi_enrichment(genes))
+    pancan_enr_list.append(stringdb.get_enrichment(genes))
+    print(ppi_enr_list[item])
+    print(pancan_enr_list[item])
+```
+
+## And for the data from gtex:
+
+
+```{python}
+import stringdb
+ext_gene_lists = []
+for list in richs_gtex:
+    g_list = pd.DataFrame(list)
+    genes = g_list[0].astype("str")
+    ext_gene_lists.append(genes)
+ppi_enr_list = []
+gtex_enr_list = []
+for item in range(len(ext_gene_lists)):
+    genes = ext_gene_lists[item]
+    string_ids = stringdb.get_string_ids(genes)
+    ppi_enr_list.append(stringdb.get_ppi_enrichment(genes))
+    gtex_enr_list.append(stringdb.get_enrichment(genes))
+    print(ppi_enr_list[item])
+    print(gtex_enr_list[item])
+```
+
+# Look into the future:
+
+
